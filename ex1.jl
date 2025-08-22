@@ -39,7 +39,7 @@ md"""
 
 # ╔═╡ 9e04db5d-0662-4a39-af3b-85e68f948ebc
 md"""
-In this exercise, we'll profile some functions that we've used in [Lab 4](https://psuastro528.github.io/lab4-start/): `calc_ecc_anom`, `calc_rv_keplerian`, and  `calc_periodogram`.
+In this exercise, we'll profile some functions that we've used in [Lab 4](https://psuastro528.github.io/lab4/): `calc_ecc_anom`, `calc_rv_keplerian`, and  `calc_periodogram`.
 You may want to look at the source code and/or the help information for each of these functions to remind yourself of what they do.  In order to make the profiler outpus easier to read, the functions that we'll profile have been placed into separate files inside this repository's `src` directory.
 """
 
