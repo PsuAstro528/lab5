@@ -336,7 +336,7 @@ end
 
 # ╔═╡ 488e83b4-4f5e-400f-85e2-f3b0716d7404
 md"""
-As before, there's over two dozen levels of functions at the top of the profile results before we get to our functions of interest, 'calc\_periodogram'.  Scroll down until you find the first cell labeled  'calc\_periodogram' and line 30.  Then click the last cell of equal width likely labeled '#3').  Look at how the code is spending its time.
+As before, there's over two dozen levels of functions at the top of the profile results before we get to our functions of interest, 'calc\_periodogram'.  Scroll down until you find the first cell labeled  'calc\_periodogram' and line 30.  (You might have to click 'reset view' to be able to scroll that far.)  Then click the last cell of equal width likely labeled '#3').  Look at how the code is spending its time.
 
 1f.  Look for some cells near the bottom that take a non-trivial fraction of the time and aren't doing math.  What is taking time and could be avoided (or at least significantly reduced)?
 """

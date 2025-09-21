@@ -54,8 +54,8 @@ function calc_design_matrix_circ!(result::AM, period::Real, times::AV) where { R
 	n = length(times)
 	@assert size(result,1) == n
 	@assert 2<= size(result,2) <=3
-	for i in 1:n
-		( result[i,1], result[i,2] ) = sincos(2π/period .* times[i])
+	@simd for i in 1:n
+		@inbounds ( result[i,1], result[i,2] ) = sincos(2π/period .* times[i])
 	end
 	if size(result,2) == 3
 		result[:,3] .= one(eltype(result))
