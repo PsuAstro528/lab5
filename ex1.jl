@@ -16,16 +16,14 @@ macro bind(def, element)
     #! format: on
 end
 
-# ╔═╡ 8b184833-59d9-4958-8460-369b1ea19b9e
-using Printf
-
 # ╔═╡ 0cac30f1-9101-4ba3-accc-52621bc1d16f
 begin
-	using PlutoUI, PlutoTest, PlutoTeachingTools, PlutoLinks
-	using BenchmarkTools
-	using Profile, ProfileCanvas 
 	using LinearAlgebra, PDMats # used by periodogram.jl
 	using Statistics: mean, std    # used by periodogram.jl
+	using Printf
+	using BenchmarkTools
+	using Profile, ProfileCanvas 
+	using PlutoUI, PlutoTest, PlutoTeachingTools, PlutoLinks
 	using Random
 	Random.seed!(123)
 	eval(Meta.parse(code_for_check_type_funcs))
@@ -64,10 +62,10 @@ Next, we'll demonstrate the syntax for using Julia's profiler.
 
 # ╔═╡ 1e4df7eb-d8de-4bae-912e-c2360f530b76
 with_terminal() do
-	calc_ecc_anom(π/4,0.5)     # Make sure our function is avaliable & compiled
-	Profile.clear()  # Clear the data stored by the profiler
-	@profile calc_ecc_anom(π/4,0.5)
-	Profile.print()
+	calc_ecc_anom(π/4,0.5)          # Make sure our function is avaliable & compiled
+	Profile.clear()                 # Clear any data stored by the profiler
+	@profile calc_ecc_anom(π/4,0.5) # Profile function
+	Profile.print()                 # Print summary of profiling data
 end
 
 # ╔═╡ 3f55c815-65a2-4950-8b2f-bc6d19e606c6
@@ -78,12 +76,11 @@ The odds are that you got a warning message that there were no samples collected
 # ╔═╡ 10b4e800-5415-4e4a-a5e0-43bb0e778f26
 function profile_calc_ecc_anom(n::Integer=1)
 	@assert n>=1
-	calc_ecc_anom(π/4,0.5)     # Make sure our function is avaliable & compiled
-	for i in 1:n 		              # Accumulate data over multiple function calls
+	calc_ecc_anom(π/4,0.5)        # Make sure our function is avaliable & compiled
+	@profile for i in 1:n 		          # Accumulate data over multiple function calls
 		mean_anom = 2π*rand()     # Generate random input values
 		ecc = rand()
-		# Actually run profiler on one call
-		@profile calc_ecc_anom(mean_anom,ecc)
+		calc_ecc_anom(mean_anom,ecc) # Actually run profiler on one call
 	end
 	Profile.retrieve()
 end
@@ -96,8 +93,8 @@ Now we'll run the profile on `calc_ecc_anom` (and save the results two ways to c
 # ╔═╡ b355695e-354b-48c0-a415-8f0c74c88265
 begin
 	Profile.clear()
-	Profile.init(delay=1e-7) 
-	retrieve_prof_calc_ecc_anom = profile_calc_ecc_anom(10^5);
+	Profile.init(delay=1e-6) 
+	retrieve_prof_calc_ecc_anom = profile_calc_ecc_anom(10^6);
 	# Print a human-readable version to a file for use below
 	filename1, file1 = mktemp() 
 	Profile.print(IOContext(file1, :displaysize => (24, 500)) )
@@ -114,30 +111,31 @@ Profile.print(retrieve_prof_calc_ecc_anom..., )
 
 # ╔═╡ b2eb6f46-8707-4f46-ada1-dd309a4b4cab
 md"""
-You should see lots of data above.  Each line of output corresponds to one line of code.  On the right of each line is the file containing the relevant code, the line number and a  function.  The number immediately to the left of the text is the number of times that the profiles checked in and found that the computer was executing that line of code *including* any computations in functions that resulted from it.  
+You should see lots of data above.  Each line of output corresponds to one line of code.  On the right of each line is the file containing the relevant code, the line number and a  function name.  The number immediately to the left of the text is the number of times that the profiler checked in and found that the computer was executing that line of code *including* any computations in functions that were called by that line.  
 
 This is a *tree view*, meaning that the lines are organized by what function calls what function.  The first several lines are because we're running inside a Pluto notebook.  Pluto wraps our cells in several functions to make it's reactive environment work.  
 
-We could skip down to the line just below the line containing 'Profile.jl#@#==#...:27; macro expansion' (The '...' shorthand for a string of letters and numbers that Pluto uses to identify which cell the code is in).  That's where the work we're interested begins.  The number immediately to the left is the total number of profiler samples collected for our code (in this case `calc_ecc_anom`).
+We could skip down to the line just below the line containing '##function_wrapped_cell#271' (The '...' shorthand for a string of letters and numbers that Pluto uses to identify which cell the code is in).  That's where the work we're interested begins.  The number immediately to the left is the total number of profiler samples collected for our code (in this case `calc_ecc_anom`).
 """
 
-# ╔═╡ d304539f-8b95-446a-aa7e-51abdc109bc9
+# ╔═╡ 4dc62fc8-362c-4851-9863-a2c8c57b2534
 md"""
 For larger codes, sometimes the results are so big (or there is such a deep tree of functions), that you want the profiler output to be spread over more columns than the default.  Already, many lines have some text replaced with '...' so that the text fits within a standard terminal width.  To make it easier for you, we'll write the profile results to a text file and specify that it should assume there can write very wide lines to the file.
-
-It'll also make it easier to find what we're most interested in, if we 'filter' the results to keep only lines of code that we're interested in.  In this case, we'll focus on code from the file named 'kepler_eqn.jl'.  Click the rightarrow  below to display the full results of the selected lines.
-"""
-
-# ╔═╡ 093813dd-6709-4ccf-b467-173df6c965f7
-md"""
-Once we've written the profiling results to a file, we can read each line and select the lines that refer to specific functions that we're specifically interested in.
 """
 
 # ╔═╡ 983f4e76-df19-4a18-9d52-41e112f364fb
 profile_results_from_file = readlines(filename1)
 
+# ╔═╡ 41c87a39-0e25-48fc-ae82-15ad62b7bfd4
+md"""
+Once we've written the profiling results to a file, we can read each line and select the lines that refer to specific functions that we're specifically interested in.
+We can **`filter`** the results to keep only lines of code that we're interested in.  In this case, we'll focus on code from the file named 'kepler_eqn.jl'.  Click the rightarrow  below to display the full results of the selected lines.
+"""
+
 # ╔═╡ bfe30f9c-439f-4040-be5c-7c3d6e3a3438
-vcat(profile_results_from_file[1:2],filter(l->contains(l,"kepler_eqn.jl") , profile_results_from_file))
+vcat(profile_results_from_file[1:2],
+	 filter(l->contains(l,"kepler_eqn.jl") , profile_results_from_file)
+	)
 
 # ╔═╡ c35f9ce9-01ed-46d2-8732-6f6778449479
 md"""
@@ -145,10 +143,20 @@ md"""
 """
 
 # ╔═╡ 8894cd1c-5f94-4b07-94a0-757b2fdf75db
-response_1a = ""# missing # Replace with an integer
+response_1a = missing # Replace with an integer
 
-# ╔═╡ 640647b7-1388-41dd-9a9a-e440898be3ab
-display_msg_if_fail(check_type_isa(:response_1a,response_1a,Integer))
+# ╔═╡ ddb2f4f2-899e-412b-b19d-4850abacbc27
+begin
+	if !@isdefined(response_1a)
+		var_not_defined(:response_1a)
+	elseif ismissing(response_1a)
+		still_missing()
+	elseif !(3500 <= response_1a <= 5500 )
+		keep_working(md"Please double check that.")
+	else
+		correct(md"That's at least in the right ballpark.")
+	end
+end
 
 # ╔═╡ 3005d8e2-f018-43eb-9759-8ee48fa9ea1a
 md"""
@@ -158,7 +166,7 @@ Which line numer of code in kepler_eqn is taking the most time?
 """
 
 # ╔═╡ 4fb20f7c-ba52-4381-b75d-1a726e62569c
-response_1b = ""#missing # Replace with an integer
+response_1b = missing # Replace with an integer
 
 # ╔═╡ 4a37d8c9-8766-4692-8c8d-4f14c67df4ee
 begin
@@ -205,7 +213,7 @@ begin
 end
 
 # ╔═╡ 2869aaa6-9941-46b0-b240-cf9e39231525
-md"1d. Look at the source code for 'update\_ecc\_anom\_laguerre'.  What is that line doing?"
+md"1d. Look at the source code for 'update\_ecc\_anom\_laguerre' in 'src/kepler_eqn.jl`.  What is that line doing?"
 
 # ╔═╡ 4ed00d92-eff3-4ff5-a97d-c844e7a48c67
 response_1d = missing # Replace with md"Response"
@@ -228,7 +236,7 @@ end
 
 # ╔═╡ f43bd729-fedb-4638-8c97-fbfa6d70c049
 md"""
-Again, since this calculation was so fast, we see that most of the time (width) was taken by Pluto managing the work.  We're going to zoom in on the portion where it's actually evaluating our function.  Click once on the cell in the bottom right, so that cell now fill the width and it will shows more rows, deeper down the call stack. Look towards the bottom for one of the cells labeled macro expansion and click it once.  It'll zoom in again.  Now you should be able to see a cell on the right labeled `calc_ec..`.  Click the first (highest up) one of those.  
+Again, since this calculation was so fast, we see that most of the time (width) was taken by Pluto managing the work.  We're going to zoom in on the portion where it's actually evaluating our function.  Click once on the cell in the bottom right, so that cell now fill the width and it will shows more rows, deeper down the call stack. Find one of the cells labeled macro expansion and click it once.  It'll zoom in again.  Now you should be able to see that most of the width is being taken up by a cell labeled `calc_ec..`.  Click the first (highest up) one of those.  
 
 Now, you can see where the time for `calc_ecc_anom` is really going visually.  Hover over some of the longer cells to see the full function name, line number and number of samples collected for that line.  
 """
@@ -279,7 +287,7 @@ md"### Generate data to analyze"
 
 # ╔═╡ 938e338e-9242-4343-accf-c9d5d1c0420a
 md"""
-Now, we'll generate a set of Keplerian orbital parameters and simulated data to use for profiling our code.
+First we'll set the Keplerian orbital parameters used for benchmarking our periodogram code.
 """
 
 # ╔═╡ 104828fd-61d1-48af-879c-719b95cc1074
@@ -292,11 +300,21 @@ begin
 	param_true = [P,K,ecc,ω,M0]
 end;
 
+# ╔═╡ 03c1501a-52e7-445f-b96b-0b7cee0681ed
+md"""
+The following two parameters will affect the ammount of work and wall time required.
+"""
+
 # ╔═╡ ffd9315b-d5ad-4636-ba2f-5380c22055d2
 num_obs = 100;        # Number of simulated observations
 
 # ╔═╡ b5f4992a-5233-4ade-8ca4-bf2e6da1a4ac
 num_periods = 10000;  # Number of potential orbital periods to search
+
+# ╔═╡ 68b64673-d0e3-4233-89b3-3e59190e6c5d
+md"""
+Next, we'll generates some simulated data to analyze while profiling our code.
+"""
 
 # ╔═╡ e36ebf1c-a750-40b4-8815-8bb3dee3910f
 begin
@@ -318,7 +336,7 @@ end
 
 # ╔═╡ 488e83b4-4f5e-400f-85e2-f3b0716d7404
 md"""
-As before, there's over two dozen levels of functions at the top of the profile results before we get to our functions of interest, 'calc\_periodogram'.  Click on lower row, repeat and then look for the first cell labeled  'calc\_periodogram' and line 30.  Then click the last cell of equal width likely labeled '#3').  Look at how the code is spending its time.
+As before, there's over two dozen levels of functions at the top of the profile results before we get to our functions of interest, 'calc\_periodogram'.  Scroll down until you find the first cell labeled  'calc\_periodogram' and line 30.  Then click the last cell of equal width likely labeled '#3').  Look at how the code is spending its time.
 
 1f.  Look for some cells near the bottom that take a non-trivial fraction of the time and aren't doing math.  What is taking time and could be avoided (or at least significantly reduced)?
 """
@@ -353,7 +371,8 @@ Before looking into any performance improvements, we should double check that we
  begin
 	result_orig = calc_periodogram_orig(times,rvs_obs,σ_rvs)
 	result_new  = calc_periodogram(times,rvs_obs,σ_rvs)
-	@test all(result_new.periodogram .≈ result_orig.periodogram) && all(result_new.predict .≈ result_orig.predict)
+	@test all(result_new.periodogram .≈ result_orig.periodogram) && 
+		  all(result_new.predict .≈ result_orig.predict)
 end
 
 # ╔═╡ e16a4171-e82d-4c43-af26-1f183fd15b2f
@@ -388,7 +407,7 @@ end
 
 # ╔═╡ 1d9033dd-e266-4192-930d-ef5be6780226
 md"""
-Again, click on the bottom row, repate and click the cell with 'calc\_periodogram' and line 30.  Then click on the last row below with nearly the same width (likely labeled '#3'.  Look at how the code is spending its time.
+Again, scroll down to find the cell with 'calc\_periodogram' and line 30.  Then click on the last row below with nearly the same width (likely labeled '#3'.  Look at how the code is spending its time.
 
 1g.  Do you notice any memory allocations inside calc_periodogram?  How does the time spent allocating memory compare to the original periodogram code?
 """
@@ -471,7 +490,7 @@ response_1l = missing  # Replace with md"Response"
 md"# Helper Code"
 
 # ╔═╡ 81d7a663-1079-4613-afd8-de95eb73f8ae
-ChooseDisplayMode()
+WidthOverDocs()
 
 # ╔═╡ d93a8dca-9c63-4551-87e8-9939a765bef1
 TableOfContents(aside=true)
@@ -960,13 +979,13 @@ version = "17.4.0+2"
 # ╟─5297dcb2-974a-4bdc-a78d-d353299db2bc
 # ╠═cce0518b-68fc-43a7-866a-d02febcf9901
 # ╟─b2eb6f46-8707-4f46-ada1-dd309a4b4cab
-# ╟─d304539f-8b95-446a-aa7e-51abdc109bc9
-# ╟─093813dd-6709-4ccf-b467-173df6c965f7
+# ╟─4dc62fc8-362c-4851-9863-a2c8c57b2534
 # ╠═983f4e76-df19-4a18-9d52-41e112f364fb
+# ╟─41c87a39-0e25-48fc-ae82-15ad62b7bfd4
 # ╠═bfe30f9c-439f-4040-be5c-7c3d6e3a3438
 # ╟─c35f9ce9-01ed-46d2-8732-6f6778449479
 # ╠═8894cd1c-5f94-4b07-94a0-757b2fdf75db
-# ╟─640647b7-1388-41dd-9a9a-e440898be3ab
+# ╠═ddb2f4f2-899e-412b-b19d-4850abacbc27
 # ╟─3005d8e2-f018-43eb-9759-8ee48fa9ea1a
 # ╠═4fb20f7c-ba52-4381-b75d-1a726e62569c
 # ╟─4a37d8c9-8766-4692-8c8d-4f14c67df4ee
@@ -991,8 +1010,10 @@ version = "17.4.0+2"
 # ╟─71205282-e4bc-479f-b7c0-db6783066d84
 # ╟─938e338e-9242-4343-accf-c9d5d1c0420a
 # ╠═104828fd-61d1-48af-879c-719b95cc1074
+# ╟─03c1501a-52e7-445f-b96b-0b7cee0681ed
 # ╠═ffd9315b-d5ad-4636-ba2f-5380c22055d2
 # ╠═b5f4992a-5233-4ade-8ca4-bf2e6da1a4ac
+# ╟─68b64673-d0e3-4233-89b3-3e59190e6c5d
 # ╠═e36ebf1c-a750-40b4-8815-8bb3dee3910f
 # ╟─7cba065d-98b4-4e04-a3b4-76224878a0bd
 # ╠═be711ea3-5f90-47bc-906a-4dd6bb470ccf
@@ -1033,9 +1054,8 @@ version = "17.4.0+2"
 # ╟─2871b32a-180e-4d57-a1c8-44bc68ec1816
 # ╠═bc1e3f75-8d92-4311-877a-6a4d7f227830
 # ╟─b0eccdc2-40bc-44d7-8a72-3e059a4214ab
-# ╠═81d7a663-1079-4613-afd8-de95eb73f8ae
-# ╠═d93a8dca-9c63-4551-87e8-9939a765bef1
-# ╠═8b184833-59d9-4958-8460-369b1ea19b9e
+# ╟─81d7a663-1079-4613-afd8-de95eb73f8ae
+# ╟─d93a8dca-9c63-4551-87e8-9939a765bef1
 # ╠═0cac30f1-9101-4ba3-accc-52621bc1d16f
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

@@ -85,7 +85,7 @@ end
 md"""
 Notice that it's using the data in `times`, `rvs_obs` and `σ_rvs`, even though they're not passed as function arguements.  Therefore, the function will look for those variables in the scope of wherever it's called from.  In this case, we'll call it from the notebook, and we've defined the variables in the code cell above.
 
-We can see how julia gradually compiles our code by using macros for *code inspection*.  `@code_lowered` shows the result of the first step which does not make use of type information.
+We can see how julia gradually compiles our code by using macros for *code inspection*.  `@code_lowered` shows the result of the first step in the compilation process which does not make use of type information.
 """
 
 # ╔═╡ 6ac7900b-cff2-4b5c-b3b5-bf55ba1f5951
@@ -107,7 +107,7 @@ end
 
 # ╔═╡ 84c568c0-2a26-4e9d-9129-6cc120e919f7
 md"""
-While there is a lot here, we can be on the lookout for variables labeled '::ANY', meaning the compiler can't infer what type they'll have.  As a result, future calculations that depend on these variables can not be optimized for the specific types.  In this case, `times`, `rvs_obs`, and `σ_rvs` have type Any.  This causes `rvs_pred`, `Δrv` and `χ²` to also have type Any.  """
+While there is a lot here, we can be on the lookout for variables labeled **`::Any`**, meaning the compiler can't infer what type they'll have.  As a result, future calculations that depend on these variables can not be optimized for the specific types.  In this case, `times`, `rvs_obs`, and `σ_rvs` have type Any.  This causes `rvs_pred`, `Δrv` and `χ²` to also have type Any.  """
 
 # ╔═╡ e99f1365-4cce-4be2-b15a-ca68276e17c4
 protip(md"Although, there aren't examples here, we should also be on the lookout for variables labeled '::Union{...}', indicating that the compiler was able to narrow down the possible types to a list, but couldn't identify one specific type.  If you're using a terminal that supports color, then it will indicate both `Any` and `Union` types in red, so they're easy to spot.
@@ -126,7 +126,7 @@ end
 
 # ╔═╡ 95d97786-6048-4203-b154-4d3e120d8bed
 md"""
-It reports each time that julia is having to figure out types at runtime rather than at compile time ("runtime dispatch detected").  If you scroll to the right, you'll see the filename, cell id and line number within the cell (e.g., `calc_χ²_v0...ex2.jl#==#e3186d2e-be3e-4beb-a7b6-fbd3e0b01e0c:5` indicates line 5 of the cell defining `calc_χ²_v0` in the notebook 'ex2.jl').
+It reports each time that julia is having to figure out types at runtime rather than at compile time ("runtime dispatch detected").  If you scroll to the right, you'll see the filename, cell id and line number within the cell (e.g., `calc_χ²_v0...ex2.jl#==#e3186d2e-be3e-4beb-a7b6-fbd3e0b01e0c:4` indicates line 4 of the cell defining `calc_χ²_v0` in the notebook 'ex2.jl').
 """
 
 # ╔═╡ 6cb5b0db-c8ca-4b21-bdb7-5b79718189e5
@@ -170,7 +170,7 @@ end
 
 # ╔═╡ e0f0437c-e463-43b2-b680-a045d27db9c8
 md"""
-This time it shouldn't detect any runtime dispatch.  We can compare the runtime of the type unstable and type stable versions of the function below.
+This time the `@report_opt` macro shouldn't detect any runtime dispatch.  We can compare the runtime of the type unstable and type stable versions of the function below.
 """
 
 # ╔═╡ d43f3834-ae39-46aa-bfd0-03ffd8ef0ce6
@@ -193,7 +193,7 @@ end
 
 # ╔═╡ 2c1cff43-2ac1-4b42-9db5-c75cdcc2f7cd
 md"""
-While we solved the type instability problem quickly, there are some disadvantages.  First, the names and types of the variables containing the data are hard coded.  This makes `calc_χ²_v1a` susceptive to unexpected behavior if the global variables change.  For example if someone set `rvs_obs` as `Float32`'s, they'd get an error message.   Not as generic as it could be.  In next sections we'll explore other programming patterns that solve the type stability issue, while also resulting in code that is more modular, more performant and easier to read, maintain and debug.
+While we solved the type instability problem quickly, there are some disadvantages.  First, the names and types of the variables containing the data are hard coded.  This makes `calc_χ²_v1a` susceptive to unexpected behavior if the global variables change.  For example if someone set `rvs_obs` as `Float32`'s, they'd get an error message.   I.e., the code above is not as generic as it could be.  In next sections we'll explore other programming patterns that solve the type stability issue, while also resulting in code that is more modular, more performant and easier to read, maintain and debug.
 """
 
 # ╔═╡ e3eb842f-e470-4b3e-8da4-275427da841d
@@ -298,7 +298,7 @@ md"""
 """
 
 # ╔═╡ 0e5641d9-8d14-49ce-9c6c-e5edf1f9b27d
-data_as_named_tuple = missing # TODO: replace with your code
+data_as_named_tuple =   missing # TODO: replace with your code
 
 # ╔═╡ 22b44c84-2b5d-47f2-a23d-e90f80a1021e
 begin
@@ -524,7 +524,7 @@ md"### Inefficient structs"
 
 # ╔═╡ c5a0b2f3-c038-4754-9683-958d1ed39c52
 md"""
-Our first implementation of a custom type for containing the RvData wasn't very efficient.  Below, I'll demonstrate three other inefficient custom structs and one efficient one.
+Our first implementation of a custom type for containing the RvData wasn't very efficient because the types of the consituents wasn't constrained.  Below, I'll demonstrate three other inefficient custom structs and one efficient one.
 """
 
 # ╔═╡ 65df57f8-1a4c-495d-81e1-0b57262737cc
@@ -585,7 +585,7 @@ end
 
 # ╔═╡ f10ed432-4b04-4dd5-bfe1-94c7d47165fb
 md"""
-Now our custom structure results in no type instability and no more memory allocations than before, and our performance to date (or at least comparable to it).  However, we could make our custom structure even more generic, as shown below.
+Now our custom structure results in no type instability and no more memory allocations than before, and our performance is the best to date (or at least comparable to it).  However, we could make our custom structure even more generic, as shown below.
 """
 
 # ╔═╡ e9520732-40b8-4b16-82e9-cbb1e5b91486
@@ -869,7 +869,7 @@ display_msg_if_fail(check_type_isa(:response_2i,response_2i,Markdown.MD))
 md"# Helper Code"
 
 # ╔═╡ 5898c143-9d1c-40bb-9783-2a13a11d42f0
-ChooseDisplayMode()
+WidthOverDocs()
 
 # ╔═╡ d93a8dca-9c63-4551-87e8-9939a765bef1
 TableOfContents(aside=true)
@@ -1655,7 +1655,7 @@ version = "17.4.0+2"
 # ╟─461a74d0-4e9d-44c0-93e1-6a91b91d04ab
 # ╟─b0eccdc2-40bc-44d7-8a72-3e059a4214ab
 # ╟─5898c143-9d1c-40bb-9783-2a13a11d42f0
-# ╠═d93a8dca-9c63-4551-87e8-9939a765bef1
+# ╟─d93a8dca-9c63-4551-87e8-9939a765bef1
 # ╠═0cac30f1-9101-4ba3-accc-52621bc1d16f
 # ╟─2c34baa9-2645-4e68-9134-8eb2605b7a26
 # ╟─00000000-0000-0000-0000-000000000001
