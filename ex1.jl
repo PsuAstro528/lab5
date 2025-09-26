@@ -139,7 +139,7 @@ vcat(profile_results_from_file[1:2],
 
 # ╔═╡ c35f9ce9-01ed-46d2-8732-6f6778449479
 md"""
-1a.  How many samples did you get for 'kepler\_eqn.jl:45; calc\_ecc\_anom' (the first time it appears and its largest value)?
+1a.  How many samples did you get for 'kepler\_eqn.jl:46; calc\_ecc\_anom' (the first time it appears and its largest value)?
 """
 
 # ╔═╡ 8894cd1c-5f94-4b07-94a0-757b2fdf75db
@@ -151,8 +151,8 @@ begin
 		var_not_defined(:response_1a)
 	elseif ismissing(response_1a)
 		still_missing()
-	elseif !(3500 <= response_1a <= 5500 )
-		keep_working(md"Please double check that.")
+	#elseif !(3500 <= response_1a <= 5500 ) # TODO: extract correct value from file to deal with students requested different number of cores 
+	#	keep_working(md"Please double check that.")
 	else
 		correct(md"That's at least in the right ballpark.")
 	end
